@@ -42,11 +42,13 @@ def predict(recipes, ratings, num_predictions):
     clf = tree.DecisionTreeRegressor()
     clf = clf.fit(feature_vectors, list(map(lambda x: x['rating'], ratings)))
 
-    all_recipes = list(recipes.values())
-    feature_vectors = list(map(lambda x: recipe_to_feature_vector(x, ingredient_feature_idx), all_recipes))
+    rated_names = set(map(lambda x: x['name'], rated_recipes))
+    unrated_recipes = list(filter(lambda x: x["name"] not in rated_names, list(recipes.values())))
+
+    feature_vectors = list(map(lambda x: recipe_to_feature_vector(x, ingredient_feature_idx), unrated_recipes))
 
     predictions = clf.predict(feature_vectors)
 
     return list(
         map(lambda x: {**x[0], "score": x[1]}, 
-            sorted(zip(all_recipes, predictions), key=lambda x: x[1], reverse=True)[:num_predictions]))
+            sorted(zip(unrated_recipes, predictions), key=lambda x: x[1], reverse=True)[:num_predictions]))
